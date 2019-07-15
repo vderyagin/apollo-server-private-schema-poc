@@ -1,9 +1,5 @@
 const { ApolloServer, gql } = require('apollo-server-express');
 
-const express = require('express');
-
-const privateMiddleware = require('./privateServer');
-
 const books = [
   {
     title: 'Harry Potter and the Chamber of Secrets',
@@ -14,6 +10,7 @@ const books = [
     author: 'Michael Crichton',
   },
 ];
+
 
 const typeDefs = gql`
   # Comments in GraphQL are defined with the hash (#) symbol.
@@ -27,34 +24,20 @@ const typeDefs = gql`
   # The "Query" type is the root of all GraphQL queries.
   # (A "Mutation" type will be covered later on.)
   type Query {
+    secret: String!
     books: [Book]
   }
-`
+`;
+
 
 const resolvers = {
   Query: {
     books: () => books,
+    secret: () => 'BLA_BLA_BLA',
   },
 };
 
-let app = express();
 
 const server = new ApolloServer({typeDefs, resolvers});
 
-const publicMw = server.getMiddleware();
-
-const schemaMiddleware = (req, res, next) => {
-  let mw = publicMw;
-  if (req.query.private === 'true') {
-    console.log('private');
-    mw = privateMiddleware;
-  }
-
-  return mw(req, res, next);
-};
-
-app.use(schemaMiddleware);
-
-app.listen({ port: 4000 }, () =>
-  console.log(`Server ready at http://localhost:4000${server.graphqlPath}`)
-)
+module.exports = server.getMiddleware();
